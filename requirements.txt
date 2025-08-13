@@ -4,3 +4,11 @@ matplotlib
 seaborn
 scikit-learn
 ydata-profiling
+scipy
+statsmodels
+typer
+rich
+jinja2
+shap
+xgboost
+lightgbm
