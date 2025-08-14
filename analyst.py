@@ -349,3 +349,6 @@ def ask(csv: str = typer.Argument(..., help="Path to CSV used in analyze"),
 
 if __name__ == "__main__":
     APP()
+
+#python analyst.py analyze Multiclass_Diabetes_Dataset.csv Class
+
