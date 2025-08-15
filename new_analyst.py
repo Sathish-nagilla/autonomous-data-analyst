@@ -175,4 +175,123 @@ class AnalystAgent:
             "corr_top": corr_top,
             "charts": charts
         }
+    # plotting count bar plot for categorical columns
+    def plot_bar_pie_with_nan(df:pd.DataFrame, categorical_columns:List, charts: List[str], plots_per_row:int =2, nan_label:str="nan", wrap_width=15):
         
+        total_plots = len(categorical_columns) * 2
+        rows = math.ceil(total_plots / plots_per_row)
+        
+        fig, axes = plt.subplots(rows, plots_per_row, figsize=(plots_per_row * 5.5, rows * 4))
+        axes = axes.flatten()
+        ax_idx = 0
+
+        for col in categorical_columns:
+            if col not in df.columns:
+                print(f"Column '{col}' not found, skipping.")
+                continue
+
+            series = df[col].copy()
+            
+            # Add 'nan' label for missing values
+            if pd.api.types.is_categorical_dtype(series):
+                if nan_label not in series.cat.categories:
+                    series = series.cat.add_categories([nan_label])
+            series = series.fillna(nan_label)
+
+            counts = series.value_counts(dropna=False)
+            labels = [textwrap.fill(str(lab), wrap_width) for lab in counts.index]
+
+            # Bar plot
+            sns.barplot(x=labels, y=counts.values, ax=axes[ax_idx], palette="bright")
+            axes[ax_idx].set_title(f'Bar - {col}')
+            axes[ax_idx].tick_params(axis='x', rotation=30)
+            axes[ax_idx].set_ylabel("Count")
+            #y limits
+            limmax=series.value_counts().max()
+            y_max = math.ceil(limmax+(limmax*0.1))  # Next whole number
+            axes[ax_idx].set(ylim=(0, y_max))
+            # Add count labels on bars
+            for container in axes[ax_idx].containers:
+                axes[ax_idx].bar_label(container, fontsize=9, padding=2)
+            ax_idx += 1
+
+            # Pie chart
+            axes[ax_idx].pie(counts.values, labels=labels, autopct='%1.1f%%', colors=sns.color_palette("bright"))
+            axes[ax_idx].set_title(f'Pie - {col}')
+            ax_idx += 1
+
+        # Remove any unused axes
+        for i in range(ax_idx, len(axes)):
+            fig.delaxes(axes[i])
+        plt.tight_layout()
+        figpath = safe_figpath(f"countplot_categorical.png")
+        plt.savefig(figpath); plt.close()
+        charts.append(figpath)
+
+    # plotting count bar plot for binary columns
+    def plot_bar_grid(df:pd.DataFrame, all_cols:List, charts: List[str], cols_per_row:int=3,nan_label:str="nan"):
+        
+        figpath = safe_figpath(f"countplot_binary.png")
+
+        num_plots = len(all_cols)
+        rows = math.ceil(num_plots / cols_per_row)
+        
+        fig, axes = plt.subplots(rows, cols_per_row, figsize=(cols_per_row * 5, rows * 4))
+        axes = axes.flatten()
+
+        for i, col in enumerate(all_cols):
+            # Replace NaN with a visible label
+            temp_series = df[col].copy()
+            temp_series = temp_series.fillna(nan_label)
+            count=temp_series.count()
+
+            # Plot
+            sns.countplot(x=temp_series, ax=axes[i], palette="dark")
+            axes[i].set_title(f'{col}')
+            axes[i].set_xlabel("")
+            axes[i].set_ylabel("Count")
+            
+            limmax=temp_series.value_counts().max()
+            y_max = math.ceil(limmax+(limmax*0.1))  # Next whole number
+            axes[i].set(ylim=(0, y_max))
+        
+            axes[i].tick_params(axis='x', rotation=30)
+            # Add count labels on bars
+            for container in axes[i].containers:
+                axes[i].bar_label(container, fontsize=9, padding=2)
+        # Hide unused axes
+        for j in range(i+1, len(axes)):
+            fig.delaxes(axes[j])
+
+        plt.tight_layout()
+        plt.savefig(figpath); plt.close()
+        charts.append(figpath)
+    
+    # plotting histogram for numerical columns
+    def summary_plot_numerical_variables(df:pd.DataFrame, cols:List, charts: List[str]):
+        
+        l=len(cols)
+        if l==0:
+            l=1
+        #fig, ax =plt.subplots(1,2*l, figsize=(12, 4),tight_layout=True)
+        fig, ax =plt.subplots(l,2, figsize=(16, l * 5),tight_layout=True)
+
+        
+        for i,z in enumerate(cols):       
+            #hist plot
+            ax[i][0].hist(df[z].dropna(), bins=30, color='skyblue', edgecolor='black')
+            ax[i][0].set_xlabel(z)
+            ax[i][0].set_ylabel("count")
+            ax[i][0].set_title(f'Histogram - {z}')
+            
+            #box plot
+            ax[i][1].boxplot(df[z].dropna(),patch_artist=True,boxprops=dict(color='blue', facecolor='lightblue'))
+            ax[i][1].set_title(f'Barplot - {z}')
+            ax[i][1].yaxis.grid()
+            
+        plt.tight_layout()
+        figpath = safe_figpath(f"histplots_numerical.png")
+        plt.savefig(figpath); plt.close()
+        charts.append(figpath)
+
+    
