@@ -144,12 +144,15 @@ class AnalystAgent:
         df = self.df
         missing = df.isna().sum().sort_values(ascending=False)
         missing_summary = missing[missing > 0].rename("missing").to_frame()
+        # quick type inference
         num_cols = df.select_dtypes(include=np.number).columns.tolist()
         cat_cols = [c for c in df.columns if c not in num_cols]
+        # quick correlations (numeric only, top absolute)
         corr_top = None
         if self.target in num_cols:
             corr = df[num_cols].corr(numeric_only=True)[self.target].dropna().sort_values(key=np.abs, ascending=False)
             corr_top = corr.head(10).rename("corr_to_target").to_frame()
+        # simple charts
         charts = []
         self._plot_hist(self.target, df[self.target], charts)
         for col in num_cols[:min(5, len(num_cols))]:
