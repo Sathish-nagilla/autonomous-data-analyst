@@ -1,0 +1,4 @@
+# short description :
+Autonomous Data Analyst is a command-line tool that automates the early stages of data exploration and modeling.
+It profiles datasets, detects missing values, identifies key correlations, and generates visualizations automatically.
+The tool also builds baseline machine learning models and reports performance metrics, helping users quickly move from raw data to actionable insights.
